@@ -50,8 +50,8 @@ query_sentences = ['suppliers provide money',
 
 # === preparing pinecone and loading the model to create the embeddings
 # initializing pinecone
-pc = Pinecone(api_key="---------------------",
-              environment="us-west1-gcp-free")
+pc = Pinecone(api_key="86d58470-386b-415a-a29b-9196f0615a93",
+              environment="us-east-1")
 #active_indexes = pc.list_indexes()
 #index_description = pc.describe_index(active_indexes[0])
 index_name = 'myindex'
@@ -72,12 +72,12 @@ print ('\n-Starting the embedding process for the knowledge base at {}'.format(s
 t = time()
 
 # creating the embeddings for the input text
-corpus_embedding = model.encode(KG_sentences, show_progress_bar=True).tolist()
+corpus_embedding = model.encode(KG_sentences).tolist()
 print('Time to embed the input text: {} mins'.format(round((time() - t) / 60, 4)),'\n')
 #print ('len of the corpus embeddings: ', len(corpus_embedding))
 
 # creating the embeddings for the query sentences
-query_embeddings = model.encode(query_sentences, showx_progress_bar=True).tolist()
+query_embeddings = model.encode(query_sentences).tolist()
 
 
 # === adding the knowledge base text embeddings to the pinecone index
