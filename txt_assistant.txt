@@ -1,0 +1,14 @@
+Given a prompt, extrapolate as many relationships as possible from it and provide a list of updates. provide a json
+
+If an update is a relationship, provide [ENTITY 1, RELATIONSHIP, ENTITY 2]. The relationship is directed, so the order matters.
+
+Make the relationship the most granular possible.
+
+Examples:
+prompt: Sun is source of light and heat. It is also source of Vitamin D.
+updates:
+[["Sun", "source of", "light"],["Sun", "source of", "heat],["Sun","source of", "Vitamin D"]]
+
+prompt: A planning process is critical for organizations, individuals and society.
+updates:
+[["planning", "is critical for", "organizations"],["planning", "is critical for", "individuals"],["planning", "is critical for", "society"]]
