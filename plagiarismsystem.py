@@ -7,9 +7,8 @@ What does this script do:
 
 
 '''
-
+from pinecone import Pinecone
 # importing the required libraries
-from pinecone import Pinecone, ServerlessSpec
 from sentence_transformers import SentenceTransformer
 import torch
 import csv
@@ -38,15 +37,12 @@ num_KB_sentences = round(len(KG_sentences) * perc_min_single_sem_prox_score,2)
 min_cumulative_sem_prox_score = min_single_sem_prox_score * num_KB_sentences
 print ('min_cumulative_sem_prox_score:', min_cumulative_sem_prox_score)
 
-# defining the query sentences
-query_sentences = ['suppliers provide money',
-    'suppliers provide joy',
-    'supply chain gives you stamina',
-    'suppliers provide materials',
-    'supply chain transforms the world',
-    'inventory management is a waste of time',
-    'supply chain plays football',
-    'supply chain goes to the moon']
+# defining the continuation sentences
+C_sentences = []
+with open('knowledge_cont_sentences.csv', newline='') as inputfile:
+    for row in csv.reader(inputfile):
+        C_sentences.append(row[0])
+
 
 # === preparing pinecone and loading the model to create the embeddings
 # initializing pinecone
@@ -77,7 +73,7 @@ print('Time to embed the input text: {} mins'.format(round((time() - t) / 60, 4)
 #print ('len of the corpus embeddings: ', len(corpus_embedding))
 
 # creating the embeddings for the query sentences
-query_embeddings = model.encode(query_sentences).tolist()
+cont_embeddings = model.encode(C_sentences).tolist()
 
 
 # === adding the knowledge base text embeddings to the pinecone index
@@ -98,7 +94,7 @@ t = time()
 # === querying the database/index with the query sentences
 
 # looping over the query embeddings and sentences
-for query_embedding, query_sentence in zip(query_embeddings, query_sentences):
+for query_embedding, query_sentence in zip(cont_embeddings, C_sentences):
     print("\n---Query:", query_sentence)
     count_matches = 0
     res = index.query(vector= query_embedding, top_k=3, include_values=True)
@@ -112,9 +108,9 @@ for query_embedding, query_sentence in zip(query_embeddings, query_sentences):
         cumulative_score = cumulative_score + res.score
         count_matches =+ 1
     if cumulative_score == 0:
-        print ("  -- No match: the phrase is not compatible with the knowledge base")
+        print ("  -- No match: this phrase in the continuation is not compatible with the knowledge base.")
     else:
-        print ("   ---> The semantic proximity of this phrase to the knowledge base is:", round(cumulative_score,2))
+        print ("   ---> The semantic proximity of this phrase in the continuation to the knowledge base is:", round(cumulative_score,2))
         if cumulative_score < min_cumulative_sem_prox_score:
             print ('        That means the phrase is not compatible with the knowledge base')
             if count_matches > 0:
@@ -123,4 +119,5 @@ for query_embedding, query_sentence in zip(query_embeddings, query_sentences):
             print('        That means the phrase is compatible with the knowledge base')
 
 print('\nTime to evaluate the matching: {} mins'.format(round((time() - t) / 60, 4)))
+print(cumulative_score)
 
