@@ -18,6 +18,8 @@ from pyvis.network import Network
 import json
 import spacy
 import csv
+import nltk
+from nltk import tokenize
 
 
 
@@ -106,18 +108,19 @@ api_key = df.iloc[0][1] # this is the OpenAI API key
 
 in_assistant_text_file = df.iloc[1][1] # this is the name of the "assistant" text tile
 in_user_text_file = df.iloc[2][1] # this is the name of the "user" text file, with the "knowledge base"
-f = open(in_user_text_file)
-firstLine = f.readline() # Get first line.
-wordCount = 0
-data = f.read()
-lines = data.split()
-wordCount += len(lines) #get word count
-wordCount = wordCount - len(firstLine)
+
+#figure out the first sentence and sentence count for the knowledge base.
+tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+fp = open(in_user_text_file)
+sentences = fp.read()
+listOfContinuationSentences = tokenize.sent_tokenize(sentences)
+sentenceCount = len(listOfContinuationSentences) - 1
+firstLine = listOfContinuationSentences[0]
 
 #Create OpenAI Client
 client = OpenAI(api_key=api_key)
 
-#Get autocomplete response.
+#Get continuation.
 response = client.chat.completions.create(
         model="gpt-4",
         temperature = 1,
@@ -125,10 +128,73 @@ response = client.chat.completions.create(
         frequency_penalty=0,
         presence_penalty=0,
         messages=[
-            {"role": "user", "content": f"Based off of your training, generate a continuation for the following sentence {firstLine}. The continuation must be {wordCount} long"}])
+            {"role": "user", "content": f"Based off of your training, generate a continuation for the following sentence {firstLine}. The continuation must be {sentenceCount-1} sentences long."}])
 
 response.choices[0].message.content.strip()
 
+in_cont_text_file = df.iloc[3][1] # this is the name of the "user" text file, with the "knowledge base"
+
 with open("txt_cont.txt", "w") as file:
-    file.write(response.choices[0].message.content.strip()
-)
+    file.write(response.choices[0].message.content.strip())
+
+# reading the files for "assistant" and "continuation"
+with open(in_assistant_text_file, "r") as kb_text_assistant:
+    text_assistant = kb_text_assistant.read()
+with open(in_cont_text_file, "r") as kb_text_user:
+    text_user = kb_text_user.read()
+
+# initializing the OpenAI API client
+client = OpenAI(api_key=api_key)
+
+# extracting relationships via OpenAI API
+extracted_relationships_str = extract_relationships(text_assistant, text_user)
+
+# converting the string from the API to a list of lists
+extracted_relationships = json.loads(extracted_relationships_str)
+
+# creating a pandas dataframe with ['subject', 'predicate', 'object'] as columns
+columns_names = ['subject', 'predicate', 'object']
+df1 = pd.DataFrame(extracted_relationships, columns = columns_names)
+
+# lowering all the elements in the dataframe
+for col_name in columns_names:
+    df1[col_name] = df1[col_name].str.lower()
+
+# calling the function to create the knowledge graph
+entities, relationships, edge_list = graph_prep (df1)
+
+#print ('\nentities:\n', entities)
+#print ('\nrelationships:\n', relationships)
+#print ('\nedge_list:\n', edge_list)
+
+
+# placing the list of edges in a dataframe
+#   This is done to have an easier way to replace values
+df = pd.DataFrame(edge_list)
+
+# calling the lemmatization function for input lists
+entities_new, df_new1 = lemmatize(entities, df)
+relationships_new, df_edge = lemmatize(relationships, df_new1)
+
+# writing the edge list to a csv file. It wil be the base for RDF analysis
+df.to_csv('rdf_cont_list.csv', index=False, header=False)
+
+edge_list_new = df_edge.values.tolist() # this is transforming the dataframe with the edges in a list of lists
+
+# creating sentences from the edge list.
+#   Each sentence has subject, predicates and object
+sentences = []
+for elem in edge_list_new:
+    sentence = ' '.join(str(x) for x in elem)
+    if sentence not in sentences:
+        sentences.append(sentence)
+
+# writing a csv file with the sentences
+#print ('\n', sentences)
+with open("knowledge_cont_sentences.csv","w") as f:
+    wr = csv.writer(f,delimiter="\n")
+    wr.writerow(sentences)
+
+# generating the graphs
+graph_generation (edge_list_new)
+
