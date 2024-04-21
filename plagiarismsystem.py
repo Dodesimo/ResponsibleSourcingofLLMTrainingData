@@ -121,3 +121,10 @@ for query_embedding, query_sentence in zip(cont_embeddings, C_sentences):
 print('\nTime to evaluate the matching: {} mins'.format(round((time() - t) / 60, 4)))
 print(cumulative_score)
 
+
+#NLTK --> really old, find a new way to figure out how to figure out how many sentences there are.
+#Lovane Community detection --> recreate sentences at the graph level (comparison between source and continuation information).
+#Do this week
+#PostGres (langchain), as well as play around with metric
+
+

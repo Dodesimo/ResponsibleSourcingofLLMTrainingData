@@ -110,12 +110,15 @@ in_assistant_text_file = df.iloc[1][1] # this is the name of the "assistant" tex
 in_user_text_file = df.iloc[2][1] # this is the name of the "user" text file, with the "knowledge base"
 
 #figure out the first sentence and sentence count for the knowledge base.
-tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
 fp = open(in_user_text_file)
 sentences = fp.read()
-listOfContinuationSentences = tokenize.sent_tokenize(sentences)
-sentenceCount = len(listOfContinuationSentences) - 1
-firstLine = listOfContinuationSentences[0]
+nlp = spacy.load("en_core_web_lg")
+doc = nlp(sentences)
+sentences = []
+for sent in enumerate(doc.sents):
+    sentences.append(sent)
+sentenceCount = len(sentences)
+firstLine = sentences[0]
 
 #Create OpenAI Client
 client = OpenAI(api_key=api_key)
