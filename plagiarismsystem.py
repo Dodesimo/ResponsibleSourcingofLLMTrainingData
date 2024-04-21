@@ -18,9 +18,13 @@ from time import time
 # opening the file with the knowledge represented by sentences
 #   and loading it into a list
 KG_sentences = []
+
 with open('knowledge_sentences.csv', newline='') as inputfile:
-    for row in csv.reader(inputfile):
+    csv_reader = csv.reader(inputfile)
+    next(csv_reader)  # Skip the header row
+    for row in csv_reader:
         KG_sentences.append(row[0])
+
 
 # setting the threshold for the single match semantic proximity score
 min_single_sem_prox_score = 0.6

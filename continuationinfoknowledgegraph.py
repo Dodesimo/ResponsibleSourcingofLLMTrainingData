@@ -115,7 +115,7 @@ sentences = fp.read()
 nlp = spacy.load("en_core_web_lg")
 doc = nlp(sentences)
 sentences = []
-for sent in enumerate(doc.sents):
+for sent in doc.sents:
     sentences.append(sent)
 sentenceCount = len(sentences)
 firstLine = sentences[0]
@@ -131,7 +131,7 @@ response = client.chat.completions.create(
         frequency_penalty=0,
         presence_penalty=0,
         messages=[
-            {"role": "user", "content": f"Based off of your training, generate a continuation for the following sentence {firstLine}. The continuation must be {sentenceCount-1} sentences long."}])
+            {"role": "user", "content": f"Based off of your training, generate a continuation for the following sentence {firstLine}. The continuation must EXACTLY be {sentenceCount-1} sentences long."}])
 
 response.choices[0].message.content.strip()
 
