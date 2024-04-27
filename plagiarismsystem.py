@@ -125,6 +125,11 @@ for query_embedding, query_sentence in zip(cont_embeddings, C_sentences):
 print('\nTime to evaluate the matching: {} mins'.format(round((time() - t) / 60, 4)))
 print(cumulative_score)
 
+#Get degree of isomorphism
+import networkx as nx
+SG = nx.read_gml("k_graph.gml")
+CG = nx.read_gml("c_graph.gml")
+print(nx.graph_edit_distance(SG, CG))
 
 #NLTK --> really old, find a new way to figure out how to figure out how many sentences there are.
 #Lovane Community detection --> recreate sentences at the graph level (comparison between source and continuation information).

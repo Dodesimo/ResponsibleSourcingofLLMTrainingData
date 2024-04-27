@@ -90,7 +90,7 @@ def graph_generation (edge_list):
     G_viz = Network(height="500px", width="100%", bgcolor="#222222", font_color="white")
     G_viz.from_nx(G)
     G_viz.show_buttons(filter_=['physics'])
-    graph_name = 'k_graph'
+    graph_name = 'c_graph'
     G_viz.show(graph_name + '.html', notebook=False)
 
     # saving the graph as a gml file
